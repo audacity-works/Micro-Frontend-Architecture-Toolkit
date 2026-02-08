@@ -253,10 +253,6 @@ Each micro-frontend can be developed independently. Follow these guidelines:
 4. Test both standalone and integrated modes
 5. Keep shared dependencies in sync
 
-## License
-
-MIT
-
 ## Resources
 
 - [Module Federation Documentation](https://module-federation.io/)
