@@ -1,73 +1,132 @@
-# React + TypeScript + Vite
+# Shell Container (Host Application)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The main host application that orchestrates and loads micro-frontends at runtime using Module Federation.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The shell container provides:
+- Navigation and routing
+- Layout structure (header, main content, footer)
+- Dynamic loading of remote micro-frontends
+- Shared dependencies management
 
-## React Compiler
+## Project Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+shell-container/
+├── src/
+│   ├── components/
+│   │   ├── Navbar.tsx        # Bootstrap navbar with dropdown
+│   │   └── Layout.tsx        # Main layout wrapper
+│   ├── pages/
+│   │   ├── Home.tsx          # Home page
+│   │   └── AuthPage.tsx      # Loads remote Auth MFE SignIn
+│   ├── App.tsx               # Main app with routing
+│   ├── main.tsx              # Entry point
+│   └── vite-env.d.ts         # TypeScript declarations for remotes
+├── vite.config.ts            # Module Federation config
+└── package.json
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Technologies
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **React 19** - UI library
+- **TypeScript** - Type safety
+- **Vite (Rolldown)** - Build tool with experimental Rust-based bundler
+- **Bootstrap 5** - UI framework
+- **React Router DOM** - Client-side routing
+- **@popperjs/core** - Dropdown positioning
+- **@originjs/vite-plugin-federation** - Module Federation for Vite
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Installation
+
+```bash
+npm install
 ```
+
+## Development
+
+```bash
+npm run dev
+```
+
+Runs on: http://localhost:5176/
+
+## Build
+
+```bash
+npm run build
+```
+
+## Module Federation Configuration
+
+The shell container consumes remote micro-frontends:
+
+```typescript
+federation({
+  name: 'shell_container',
+  remotes: {
+    authMfe: 'http://localhost:5177/assets/remoteEntry.js',
+  },
+  shared: ['react', 'react-dom']
+})
+```
+
+### Remote MFEs
+
+- **authMfe** - Authentication micro-frontend
+  - URL: http://localhost:5177/assets/remoteEntry.js
+  - Exposed: `./SignIn` component
+
+## Routes
+
+- `/` - Home page
+- `/auth` - Authentication (loads remote SignIn from auth-mfe)
+- `/payments` - Payments (placeholder)
+- `/orders` - Orders (placeholder)
+- `/profile` - Profile (placeholder)
+
+## Features
+
+✅ Bootstrap 5 responsive navbar with dropdown menu  
+✅ React Router for client-side navigation  
+✅ Layout with header, main content area, and footer  
+✅ Dynamic remote component loading with Suspense  
+✅ Loading spinner while remote components load  
+✅ TypeScript support with remote module declarations  
+
+## Prerequisites
+
+Before running the shell container, ensure the following remote MFEs are running:
+
+1. **auth-mfe** must be built and running in preview mode on port 5177
+
+## Running the Complete Platform
+
+1. Start auth-mfe (in preview mode):
+   ```bash
+   cd ../auth-mfe
+   npm run build
+   npm run preview
+   ```
+
+2. Start shell-container (in dev mode):
+   ```bash
+   npm run dev
+   ```
+
+3. Open http://localhost:5176/ in your browser
+
+4. Click "Authentication" in the navbar dropdown to see the remote SignIn component load
+
+## Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+
+## Environment
+
+- Node.js 18+ recommended
+- Port 5176 (configurable in vite.config.ts)

@@ -1,73 +1,176 @@
-# React + TypeScript + Vite
+# Auth MFE (Authentication Micro-Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A standalone authentication micro-frontend that exposes a SignIn component via Module Federation.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The auth-mfe provides:
+- Sign-in/login functionality
+- Bootstrap-styled authentication UI
+- Exposed components for consumption by the shell container
 
-## React Compiler
+## Project Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+auth-mfe/
+├── src/
+│   ├── components/
+│   │   ├── SignIn.tsx        # Sign-in component (exposed via Module Federation)
+│   │   └── SignIn.css        # Sign-in component styles
+│   ├── App.tsx               # Main app component
+│   ├── App.css               # App styles
+│   ├── main.tsx              # Entry point
+│   └── index.css             # Global styles
+├── vite.config.ts            # Module Federation config
+└── package.json
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Technologies
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **React 19** - UI library
+- **TypeScript** - Type safety
+- **Vite (Rolldown)** - Build tool with experimental Rust-based bundler
+- **Bootstrap 5** - UI framework with floating labels
+- **@originjs/vite-plugin-federation** - Module Federation for Vite
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Installation
+
+```bash
+npm install
 ```
+
+## Development (Standalone)
+
+```bash
+npm run dev
+```
+
+Runs on: http://localhost:5177/
+
+This mode allows you to develop and test the auth-mfe independently.
+
+## Build for Module Federation
+
+```bash
+npm run build
+```
+
+Builds the application and generates the `remoteEntry.js` file required for Module Federation.
+
+## Preview (Required for Module Federation)
+
+```bash
+npm run preview
+```
+
+Runs the built application on: http://localhost:5177/
+
+**Important:** The shell container requires auth-mfe to be running in preview mode to load remote components.
+
+## Module Federation Configuration
+
+The auth-mfe exposes components for consumption by other applications:
+
+```typescript
+federation({
+  name: 'auth_mfe',
+  filename: 'remoteEntry.js',
+  exposes: {
+    './SignIn': './src/components/SignIn.tsx',
+  },
+  shared: ['react', 'react-dom']
+})
+```
+
+### Exposed Components
+
+- **./SignIn** - Sign-in component with email/password form
+
+## Features
+
+✅ Bootstrap 5 floating label form design  
+✅ Email and password input fields with validation  
+✅ "Remember me" checkbox  
+✅ Responsive design  
+✅ Beautiful gradient purple background  
+✅ Form submission handling  
+✅ Exposed via Module Federation for remote consumption  
+
+## SignIn Component
+
+The SignIn component includes:
+- Email input (required)
+- Password input (required)
+- Remember me checkbox
+- Sign in button
+- Form validation
+- Centered layout with shadow card
+
+### Usage in Shell Container
+
+```typescript
+import { lazy, Suspense } from 'react';
+
+const RemoteSignIn = lazy(() => import('authMfe/SignIn'));
+
+function AuthPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RemoteSignIn />
+    </Suspense>
+  );
+}
+```
+
+## Running with Shell Container
+
+1. Build and preview auth-mfe:
+   ```bash
+   npm run build
+   npm run preview
+   ```
+
+2. In another terminal, start the shell-container:
+   ```bash
+   cd ../shell-container
+   npm run dev
+   ```
+
+3. Navigate to http://localhost:5176/ and click "Authentication" in the navbar
+
+## Scripts
+
+- `npm run dev` - Start development server (standalone mode)
+- `npm run build` - Build for production and Module Federation
+- `npm run preview` - Preview production build (required for Module Federation)
+- `npm run lint` - Run ESLint
+
+## Environment
+
+- Node.js 18+ recommended
+- Port 5177 (configured in vite.config.ts)
+- CORS enabled for cross-origin requests
+
+## Development Workflow
+
+### Standalone Development
+When developing features independently:
+```bash
+npm run dev
+```
+
+### Integration with Shell
+When testing integration with the shell container:
+```bash
+npm run build && npm run preview
+```
+
+## Future Enhancements
+
+- [ ] Add registration/sign-up component
+- [ ] Implement actual authentication logic
+- [ ] Add password reset functionality
+- [ ] Integrate with authentication API
+- [ ] Add social login options
+- [ ] Implement JWT token management
+- [ ] Add form error handling and display
